@@ -83,16 +83,40 @@
         .main-icon { font-size: 64px !important; margin: 10px 0; }
         .temp-large { font-size: 4rem; font-weight: 700; line-height: 0.9; }
         .condition-text { font-size: 0.9rem; margin-top: 8px; text-transform: uppercase; letter-spacing: 1px;}
+        
+        .clothing-tip {
+            font-size: 0.8rem;
+            margin-top: 10px;
+            font-style: italic;
+            opacity: 0.8;
+            max-width: 80%;
+            line-height: 1.4;
+        }
+
+        .section-header {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            font-weight: bold;
+            letter-spacing: 1px;
+            border-top: var(--border);
+            padding-top: 15px;
+            margin-top: 30px;
+            margin-bottom: 15px;
+            opacity: 0.6;
+            width: 100%;
+            text-align: center;
+            display: none; 
+        }
 
         .details-grid {
             display: none;
             grid-template-columns: repeat(3, 1fr);
             gap: 15px 5px;
             width: 100%;
-            border-top: var(--border);
-            border-bottom: var(--border);
-            padding: 20px 0;
-            margin-bottom: 25px;
+            padding: 0 0 20px 0;
+        }
+
+        #pollen-grid {
         }
 
         .detail-item {
@@ -117,14 +141,37 @@
             align-items: center;
             gap: 3px;
         }
-         
+          
         .tiny-icon { font-size: 16px !important; }
+
+        #hourly-scroll {
+            display: none;
+            flex-direction: row;
+            overflow-x: auto;
+            gap: 15px;
+            width: 100%;
+            padding: 0 0 20px 0;
+            scrollbar-width: none; 
+            -ms-overflow-style: none;
+        }
+        #hourly-scroll::-webkit-scrollbar { display: none; }
+
+        .hourly-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-width: 50px;
+            flex-shrink: 0;
+        }
+        .hourly-time { font-size: 0.75rem; font-weight: bold; margin-bottom: 5px; }
+        .hourly-temp { font-size: 0.8rem; margin-top: 5px; }
 
         #forecast-grid {
             display: none;
             grid-template-columns: repeat(3, 1fr);
-            gap: 5px;
+            gap: 15px 5px;
             width: 100%;
+            padding: 0 0 20px 0;
         }
 
         .forecast-day { display: flex; flex-direction: column; align-items: center; gap: 2px; }
@@ -133,6 +180,14 @@
         .forecast-temp { font-size: 0.8rem; }
 
         .status-msg { margin-top: 40px; font-size: 0.85rem; font-style: italic; opacity: 0.8; }
+        
+        .version-info {
+            font-size: 0.65rem;
+            opacity: 0.4;
+            margin-top: 30px;
+            font-family: monospace;
+            padding-bottom: 10px;
+        }
     </style>
 </head>
 <body>
@@ -149,8 +204,10 @@
             <div class="temp-large"><span id="display-temp">--</span>°</div>
             <span class="material-symbols-outlined main-icon" id="current-icon">circle</span>
             <div class="condition-text" id="display-condition">--</div>
+            <div class="clothing-tip" id="clothing-msg">--</div>
         </div>
 
+        <div class="section-header" id="details-header">Current Details</div>
         <div class="details-grid" id="details-grid">
             <div class="detail-item">
                 <div class="detail-label">Wind</div>
@@ -196,9 +253,40 @@
             </div>
         </div>
 
+        <div class="section-header" id="pollen-header">Pollen Notes</div>
+        <div class="details-grid" id="pollen-grid">
+            <div class="detail-item">
+                <div class="detail-label">Tree</div>
+                <div class="detail-value">
+                    <span class="material-symbols-outlined tiny-icon">forest</span>
+                    <span id="pol-tree">--</span>
+                </div>
+            </div>
+            <div class="detail-item">
+                <div class="detail-label">Grass</div>
+                <div class="detail-value">
+                    <span class="material-symbols-outlined tiny-icon">grass</span>
+                    <span id="pol-grass">--</span>
+                </div>
+            </div>
+            <div class="detail-item">
+                <div class="detail-label">Ragweed</div>
+                <div class="detail-value">
+                    <span class="material-symbols-outlined tiny-icon">spa</span>
+                    <span id="pol-ragweed">--</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="section-header" id="hourly-header">Hourly Forecast</div>
+        <div id="hourly-scroll"></div>
+
+        <div class="section-header" id="forecast-header">7-Day Forecast</div>
         <div id="forecast-grid"></div>
 
         <div id="status" class="status-msg">Loading...</div>
+        
+        <div class="version-info">0.1 (12)</div>
     </div>
 
     <script>
@@ -222,11 +310,23 @@
         const els = {
             status: document.getElementById('status'),
             current: document.getElementById('current-weather'),
+            
             details: document.getElementById('details-grid'),
+            detailsHeader: document.getElementById('details-header'),
+            
+            pollenGrid: document.getElementById('pollen-grid'),
+            pollenHeader: document.getElementById('pollen-header'),
+            
+            hourly: document.getElementById('hourly-scroll'),
+            hourlyHeader: document.getElementById('hourly-header'),
+            
             forecast: document.getElementById('forecast-grid'),
+            forecastHeader: document.getElementById('forecast-header'),
+            
             city: document.getElementById('display-city'),
             temp: document.getElementById('display-temp'),
             cond: document.getElementById('display-condition'),
+            clothing: document.getElementById('clothing-msg'),
             icon: document.getElementById('current-icon'),
             wind: document.getElementById('val-wind'),
             windIcon: document.getElementById('wind-icon'),
@@ -235,7 +335,10 @@
             pres: document.getElementById('val-pres'),
             sunVal: document.getElementById('val-sun'),
             sunLbl: document.getElementById('lbl-sun'),
-            aqi: document.getElementById('val-aqi')
+            aqi: document.getElementById('val-aqi'),
+            polTree: document.getElementById('pol-tree'),
+            polGrass: document.getElementById('pol-grass'),
+            polRagweed: document.getElementById('pol-ragweed')
         };
 
         window.addEventListener('DOMContentLoaded', () => {
@@ -273,9 +376,9 @@
 
         async function fetchWeather(lat, lon, name) {
             try {
-                const weatherUrl = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,surface_pressure,wind_speed_10m,wind_direction_10m,weather_code&daily=weather_code,temperature_2m_max,temperature_2m_min,sunrise,sunset,uv_index_max&timezone=auto`;
+                const weatherUrl = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,surface_pressure,wind_speed_10m,wind_direction_10m,weather_code&hourly=temperature_2m,weather_code&daily=weather_code,temperature_2m_max,temperature_2m_min,sunrise,sunset,uv_index_max&timezone=auto&forecast_days=8`;
                 
-                const airUrl = `https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${lat}&longitude=${lon}&current=us_aqi`;
+                const airUrl = `https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${lat}&longitude=${lon}&current=us_aqi,alder_pollen,birch_pollen,grass_pollen,olive_pollen,ragweed_pollen`;
 
                 const [wRes, aRes] = await Promise.all([fetch(weatherUrl), fetch(airUrl)]);
                 const wData = await wRes.json();
@@ -289,7 +392,17 @@
 
                 els.status.style.display = 'none';
                 els.current.style.display = 'flex';
+                
+                els.detailsHeader.style.display = 'block';
                 els.details.style.display = 'grid';
+                
+                els.pollenHeader.style.display = 'block';
+                els.pollenGrid.style.display = 'grid';
+                
+                els.hourlyHeader.style.display = 'block';
+                els.hourly.style.display = 'flex';
+                
+                els.forecastHeader.style.display = 'block';
                 els.forecast.style.display = 'grid';
 
             } catch (e) {
@@ -298,21 +411,50 @@
             }
         }
 
+        function getClothingSuggestion(temp, code) {
+            const isRaining = [51, 53, 55, 61, 63, 65, 80, 81, 82, 95].includes(code);
+            const isSnowing = [71, 73, 75, 85, 86].includes(code);
+            
+            let suggestion = "";
+
+            if (temp < 0) suggestion = "Freezing. Wear a heavy coat, scarf, and gloves.";
+            else if (temp < 10) suggestion = "Cold. Wear a winter jacket or heavy layers.";
+            else if (temp < 15) suggestion = "Chilly. A sweater or light jacket is needed.";
+            else if (temp < 20) suggestion = "Mild. A hoodie or long sleeves should work.";
+            else if (temp < 25) suggestion = "Warm. T-shirt weather.";
+            else suggestion = "Hot. Wear breathable shorts and a tank top.";
+
+            if (isRaining) suggestion += " Don't forget an umbrella.";
+            if (isSnowing) suggestion += " Boots recommended.";
+
+            return suggestion;
+        }
+
+        function getPollenLevel(val) {
+            if (val === null || val === undefined) return "--";
+            if (val < 10) return "Low";
+            if (val < 30) return "Mod";
+            if (val < 100) return "High";
+            return "Extreme";
+        }
+
         function renderAll(wData, aData, name) {
             const cur = wData.current;
             const daily = wData.daily;
+            const hourly = wData.hourly;
+            const air = aData.current;
             
             els.city.textContent = name;
             els.temp.textContent = Math.round(cur.temperature_2m);
             els.cond.textContent = weatherText[cur.weather_code] || "Unknown";
             els.icon.textContent = getIcon(cur.weather_code);
+            els.clothing.textContent = getClothingSuggestion(cur.temperature_2m, cur.weather_code);
 
             els.wind.textContent = Math.round(cur.wind_speed_10m);
             els.windIcon.style.transform = `rotate(${cur.wind_direction_10m + 180}deg)`;
             
             els.hum.textContent = cur.relative_humidity_2m;
             els.pres.textContent = Math.round(cur.surface_pressure);
-            
             els.uv.textContent = daily.uv_index_max[0];
 
             const now = new Date();
@@ -330,11 +472,35 @@
                 els.sunVal.textContent = formatTime(new Date(daily.sunrise[1]));
             }
 
-            els.aqi.textContent = aData.current.us_aqi;
+            els.aqi.textContent = air.us_aqi;
+            
+            const treeVal = Math.max(air.alder_pollen || 0, air.birch_pollen || 0, air.olive_pollen || 0);
+            
+            els.polTree.textContent = getPollenLevel(treeVal);
+            els.polGrass.textContent = getPollenLevel(air.grass_pollen);
+            els.polRagweed.textContent = getPollenLevel(air.ragweed_pollen);
+
+            els.hourly.innerHTML = '';
+            const currentHour = now.getHours();
+            for(let i = 0; i < 24; i++) {
+                const hourIndex = currentHour + i;
+                if(!hourly.time[hourIndex]) break;
+                
+                const timeStr = new Date(hourly.time[hourIndex]).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit', hour12: false});
+                
+                const html = `
+                    <div class="hourly-item">
+                        <div class="hourly-time">${timeStr}</div>
+                        <span class="material-symbols-outlined tiny-icon">${getIcon(hourly.weather_code[hourIndex])}</span>
+                        <div class="hourly-temp">${Math.round(hourly.temperature_2m[hourIndex])}°</div>
+                    </div>
+                `;
+                els.hourly.innerHTML += html;
+            }
 
             els.forecast.innerHTML = '';
             const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-            for(let i = 1; i <= 3; i++) {
+            for(let i = 1; i <= 7; i++) {
                 if(!daily.time[i]) break;
                 const date = new Date(daily.time[i]);
                 const html = `
@@ -355,8 +521,18 @@
             els.status.textContent = msg;
             els.status.style.display = 'block';
             els.current.style.display = 'none';
+            
             els.details.style.display = 'none';
+            els.detailsHeader.style.display = 'none';
+            
+            els.pollenGrid.style.display = 'none';
+            els.pollenHeader.style.display = 'none';
+            
+            els.hourly.style.display = 'none';
+            els.hourlyHeader.style.display = 'none';
+            
             els.forecast.style.display = 'none';
+            els.forecastHeader.style.display = 'none';
         }
     </script>
     <script>
