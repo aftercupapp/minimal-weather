@@ -39,7 +39,7 @@
 
         .container {
             width: 100%;
-            max-width: 380px; /* Slightly wider for grid */
+            max-width: 380px;
             text-align: center;
             margin-top: 1vh;
         }
@@ -49,7 +49,6 @@
             vertical-align: middle;
         }
 
-        /* Search Bar */
         .input-group {
             display: flex;
             align-items: center;
@@ -74,7 +73,6 @@
         input::placeholder { color: var(--fg); opacity: 0.5; text-transform: none; }
         button.icon-btn { background: transparent; color: var(--fg); border: none; padding: 8px; cursor: pointer; }
 
-        /* Current Temp */
         #current-weather {
             display: none;
             flex-direction: column;
@@ -86,11 +84,10 @@
         .temp-large { font-size: 4rem; font-weight: 700; line-height: 0.9; }
         .condition-text { font-size: 0.9rem; margin-top: 8px; text-transform: uppercase; letter-spacing: 1px;}
 
-        /* Expanded Details Grid (3x2) */
         .details-grid {
             display: none;
             grid-template-columns: repeat(3, 1fr);
-            gap: 15px 5px; /* Vertical gap 15px, Horizontal gap 5px */
+            gap: 15px 5px;
             width: 100%;
             border-top: var(--border);
             border-bottom: var(--border);
@@ -120,10 +117,9 @@
             align-items: center;
             gap: 3px;
         }
-        
+         
         .tiny-icon { font-size: 16px !important; }
 
-        /* Forecast */
         #forecast-grid {
             display: none;
             grid-template-columns: repeat(3, 1fr);
@@ -206,7 +202,6 @@
     </div>
 
     <script>
-        // -- Configuration --
         function getIcon(code) {
             const map = {
                 0: 'sunny', 1: 'partly_cloudy_day', 2: 'partly_cloudy_day', 3: 'cloud',
@@ -243,7 +238,6 @@
             aqi: document.getElementById('val-aqi')
         };
 
-        // -- Lifecycle --
         window.addEventListener('DOMContentLoaded', () => {
             const savedLat = localStorage.getItem('mw_lat');
             const savedLon = localStorage.getItem('mw_lon');
@@ -255,7 +249,6 @@
             }
         });
 
-        // -- Logic --
         function getLocation() {
             if (!navigator.geolocation) return showStatus("Geolocation unsupported.");
             showStatus("Locating...");
@@ -280,7 +273,6 @@
 
         async function fetchWeather(lat, lon, name) {
             try {
-                // Fetch specific current variables + daily summaries
                 const weatherUrl = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,surface_pressure,wind_speed_10m,wind_direction_10m,weather_code&daily=weather_code,temperature_2m_max,temperature_2m_min,sunrise,sunset,uv_index_max&timezone=auto`;
                 
                 const airUrl = `https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${lat}&longitude=${lon}&current=us_aqi`;
@@ -310,25 +302,19 @@
             const cur = wData.current;
             const daily = wData.daily;
             
-            // 1. Main Display
             els.city.textContent = name;
             els.temp.textContent = Math.round(cur.temperature_2m);
             els.cond.textContent = weatherText[cur.weather_code] || "Unknown";
             els.icon.textContent = getIcon(cur.weather_code);
 
-            // 2. Details Grid
-            // Wind
             els.wind.textContent = Math.round(cur.wind_speed_10m);
             els.windIcon.style.transform = `rotate(${cur.wind_direction_10m + 180}deg)`;
             
-            // Humidity & Pressure
             els.hum.textContent = cur.relative_humidity_2m;
             els.pres.textContent = Math.round(cur.surface_pressure);
             
-            // UV Index (Max for today)
             els.uv.textContent = daily.uv_index_max[0];
 
-            // Sun (Calculate if next event is sunrise or sunset)
             const now = new Date();
             const sunrise = new Date(daily.sunrise[0]);
             const sunset = new Date(daily.sunset[0]);
@@ -340,15 +326,12 @@
                 els.sunLbl.textContent = "Sunset";
                 els.sunVal.textContent = formatTime(sunset);
             } else {
-                // Next sunrise (tomorrow)
                 els.sunLbl.textContent = "Sunrise";
                 els.sunVal.textContent = formatTime(new Date(daily.sunrise[1]));
             }
 
-            // AQI
             els.aqi.textContent = aData.current.us_aqi;
 
-            // 3. Forecast
             els.forecast.innerHTML = '';
             const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
             for(let i = 1; i <= 3; i++) {
