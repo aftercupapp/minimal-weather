@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Minimal Weather Multi</title>
+    <title>Minimal Weather</title>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,600,0,0" />
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -14,7 +14,6 @@
             --border: 3px solid #000000;
         }
 
-        /* System Dark Mode (default if no override) */
         @media (prefers-color-scheme: dark) {
             :root:not([data-theme="light"]) {
                 --bg: #000000;
@@ -23,14 +22,12 @@
             }
         }
 
-        /* Manual Dark Mode Override */
         [data-theme="dark"] {
             --bg: #000000;
             --fg: #ffffff;
             --border: 3px solid #ffffff;
         }
 
-        /* Manual Light Mode Override */
         [data-theme="light"] {
             --bg: #ffffff;
             --fg: #000000;
@@ -106,7 +103,6 @@
             padding: 5px;
         }
 
-        /* Fullscreen Menu Overlay */
         .menu-overlay {
             display: none;
             position: fixed;
@@ -116,7 +112,7 @@
             height: 100vh;
             background: var(--bg);
             z-index: 2000;
-            padding: 20px 20px 80px 20px; /* Extra bottom padding for navbar */
+            padding: 20px 20px 80px 20px;
             flex-direction: column;
             align-items: center;
         }
@@ -165,7 +161,6 @@
             padding: 5px;
         }
 
-        /* Bottom Nav in Menu */
         .menu-bottom-nav {
             position: absolute;
             bottom: 0;
@@ -198,7 +193,6 @@
             color: var(--bg);
         }
 
-        /* Settings View Styles */
         .settings-group {
             border: 1px dashed var(--fg);
             padding: 15px;
@@ -257,7 +251,6 @@
             cursor: pointer;
         }
 
-        /* Fullscreen Search Overlay */
         .search-overlay {
             display: none;
             position: fixed;
@@ -492,7 +485,6 @@
 </head>
 <body>
 
-    <!-- Privacy Overlay -->
     <div class="menu-overlay" id="privacy-overlay" style="z-index: 2001; display: none;">
         <button class="close-overlay-btn" onclick="togglePrivacy()"><span class="material-symbols-outlined">close</span></button>
         <div class="menu-header">Privacy Policy</div>
@@ -506,13 +498,11 @@
     <div class="menu-overlay" id="menu-overlay">
         <button class="close-overlay-btn" onclick="toggleMenu()"><span class="material-symbols-outlined">close</span></button>
         
-        <!-- Tab 1: Locations List -->
         <div id="view-locations" class="menu-content" style="display:flex;">
             <div class="menu-header">Manage Locations</div>
             <div id="locations-list" style="width:100%"></div>
         </div>
 
-        <!-- Tab 2: Settings -->
         <div id="view-settings" class="menu-content" style="display:none;">
             <div class="menu-header">Settings</div>
             
@@ -767,7 +757,6 @@
             loadLocations();
         });
 
-        // Theme Logic
         function initTheme() {
             const saved = localStorage.getItem('mw_theme') || 'auto';
             setTheme(saved);
@@ -780,14 +769,12 @@
                 document.documentElement.setAttribute('data-theme', mode);
             }
             
-            // Update UI buttons
             ['auto', 'light', 'dark'].forEach(t => {
                 const btn = document.getElementById(`theme-${t}`);
                 if(btn) btn.classList.toggle('active', t === mode);
             });
         }
 
-        // Menu Tab Logic
         function switchMenuTab(tab) {
             const isLoc = tab === 'locations';
             document.getElementById('view-locations').style.display = isLoc ? 'flex' : 'none';
@@ -806,7 +793,6 @@
             }
         }
 
-        // Keyboard Shortcuts
         document.addEventListener('keydown', (e) => {
             if (e.target.tagName === 'INPUT') return;
 
@@ -827,7 +813,6 @@
             }
         });
 
-        // Android Back Button Support
         window.addEventListener('popstate', () => {
             els.menu.style.display = 'none';
             els.search.style.display = 'none';
@@ -881,7 +866,7 @@
             } else {
                 els.menu.style.display = 'flex';
                 history.pushState({menu: true}, '');
-                switchMenuTab('locations'); // Reset to locations tab
+                switchMenuTab('locations');
             }
         }
 
@@ -1039,7 +1024,6 @@
             const isSnowy = [71, 73, 75, 85, 86].includes(code);
             const timeOfDay = isDay ? "day" : "night";
 
-            // 1. Current Feel
             if (temp < 0) text += `It's freezing this ${timeOfDay}. Keep warm! `;
             else if (temp < 10) text += `A rather cold ${timeOfDay}. `;
             else if (temp < 18) text += `Cool and crisp conditions. `;
@@ -1047,7 +1031,6 @@
             else if (temp < 30) text += `It is quite warm outside. `;
             else text += `Hot conditions currently. `;
 
-            // 2. Clothing & Advice
             if (temp < 5) text += "Heavy winter gear (thermal layers, gloves) recommended. ";
             else if (temp < 12) text += "Wear a warm coat. ";
             else if (temp < 18) text += "A sweater or light jacket is advised. ";
@@ -1059,7 +1042,6 @@
             if (wind > 20) text += "It's breezy outside. ";
             if (isDay && uv > 6 && !isRainy) text += "UV index is high; wear sunscreen. ";
 
-            // 3. Outlook
             if (daily) {
                 text += "<br><br>"; 
                 const todayMax = daily.temperature_2m_max[0];
@@ -1079,7 +1061,6 @@
                 else text += "The next few days look mostly dry. ";
             }
 
-            // 4. Activities & Air Quality
             text += "<br><br>";
             
             const badWeather = isRainy || isSnowy || rainProb >= 50;
