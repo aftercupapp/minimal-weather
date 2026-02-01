@@ -844,7 +844,23 @@
                     }
                     renderMenu();
                     renderDots();
-                    fetchWeatherForCurrent();
+
+                    if (locations[curLocIdx].name === "Your Location" && navigator.geolocation) {
+                        navigator.geolocation.getCurrentPosition(
+                            (pos) => {
+                                locations[curLocIdx].lat = pos.coords.latitude;
+                                locations[curLocIdx].lon = pos.coords.longitude;
+                                saveLocations();
+                                fetchWeatherForCurrent();
+                            },
+                            () => {
+                                fetchWeatherForCurrent();
+                            },
+                            { timeout: 5000, maximumAge: 0 }
+                        );
+                    } else {
+                        fetchWeatherForCurrent();
+                    }
                 } else {
                     toggleSearch();
                 }
