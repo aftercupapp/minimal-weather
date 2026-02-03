@@ -23,14 +23,14 @@ Accurate weather data powered by Open-Meteo, presented without clutter:
 * **Hourly scroll:** 24-hour horizontal scroll for immediate planning.
 * **Weekly outlook:** 7-day forecast grid with High/Low temps and precipitation probability.
 
-### 🍃 Health & Air Quality
+### 🍃 Wellbeing features
 Goes beyond simple temperature with detailed environmental metrics:
 * **Air quality:** Real-time US AQI readings.
 * **Pollen tracker:** Specific levels for Tree, Grass, and Ragweed pollen.
 * **Pollutants:** Monitoring for Dust (PM10), Fine Dust (PM2.5), and Ozone (O₃).
 * **Atmospherics:** UV Index, Humidity, Pressure, and Wind Speed/Direction.
 
-### 📍 Location Management
+### 📍 Location management
 * **Multiple cities:** Save and manage an unlimited number of locations.
 * **Geolocation:** One-click "Your Location" setup using the device's GPS.
 * **Privacy first:** All location data is stored locally in `LocalStorage`. No external servers track your movement.
