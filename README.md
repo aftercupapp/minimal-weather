@@ -37,7 +37,7 @@ Goes beyond simple temperature with detailed environmental metrics:
 
 ---
 
-## ⌨️ QWERTY Keyboard Support
+## ⌨️ QWERTY keyboard support
 
 Designed for the Minimal Phone's physical keyboard to allow navigation without touching the screen:
 
