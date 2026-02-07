@@ -58,6 +58,7 @@ Designed for the Minimal Phone's physical keyboard to allow navigation without t
 * **Theme support:** Choose between **Light**, **Dark**, or **Auto** (follows system preferences).
 * **Sunrise/Sunset:** Dynamic tracking based on the current time of day.
 * **Offline resilience:** The app shell is PWA-ready (Service Worker compatible) for faster loading.
+* Metric/imperial units support.
 
 ---
 
