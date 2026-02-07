@@ -465,7 +465,22 @@
             padding: 10px 0;
             border-bottom: 1px solid rgba(125,125,125,0.3);
         }
-        .day-name { font-size: 1rem; font-weight: 800; text-transform: uppercase; width: 50px; text-align: left; }
+        .day-name { 
+            font-size: 1rem; 
+            font-weight: 800; 
+            text-transform: uppercase; 
+            width: 90px; 
+            text-align: left; 
+            display: flex;
+            align-items: baseline;
+        }
+        .day-date {
+            font-weight: 400;
+            font-size: 0.8rem;
+            opacity: 0.7;
+            margin-left: 6px;
+        }
+
         .forecast-mid { display: flex; align-items: center; gap: 10px; flex-grow: 1; justify-content: center;}
         .forecast-icon { font-size: 32px !important; }
         .forecast-pop { font-size: 0.8rem; font-weight: 600; min-width: 40px; text-align: right;}
@@ -516,6 +531,14 @@
             </div>
 
             <div class="settings-group">
+                <span class="settings-label">Units</span>
+                <div class="theme-options">
+                    <button class="theme-btn" id="unit-c" onclick="setUnit('c')">Metric (°C)</button>
+                    <button class="theme-btn" id="unit-f" onclick="setUnit('f')">Imperial (°F)</button>
+                </div>
+            </div>
+
+            <div class="settings-group">
                 <span class="settings-label">Keyboard Shortcuts</span>
                 <div class="shortcut-list">
                     <div class="shortcut-row"><span>Next City</span> <span>SPACE</span></div>
@@ -526,7 +549,7 @@
             </div>
 
             <div class="version-text">
-                Minimal Weather v0.1 (19) Beta<br>
+                Minimal Weather v0.1 (20) Beta<br>
                 Data: <a href="https://open-meteo.com/" target="_blank">Open-Meteo</a><br>
                 <span onclick="togglePrivacy()" style="text-decoration: underline; cursor: pointer; margin-top:5px; display:inline-block;">Privacy Policy</span>
             </div>
@@ -692,6 +715,7 @@
     <script>
         let locations = [];
         let curLocIdx = 0;
+        let currentUnit = 'c';
 
         function getIcon(code, isDay) {
             if (isDay === undefined) isDay = 1;
@@ -754,6 +778,7 @@
         window.addEventListener('DOMContentLoaded', () => {
             els.date.textContent = new Date().toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
             initTheme();
+            initUnit();
             loadLocations();
         });
 
@@ -773,6 +798,21 @@
                 const btn = document.getElementById(`theme-${t}`);
                 if(btn) btn.classList.toggle('active', t === mode);
             });
+        }
+
+        function initUnit() {
+            const saved = localStorage.getItem('mw_unit') || 'c';
+            setUnit(saved, false);
+        }
+
+        function setUnit(u, shouldRefresh = true) {
+            currentUnit = u;
+            localStorage.setItem('mw_unit', u);
+            document.getElementById('unit-c').classList.toggle('active', u === 'c');
+            document.getElementById('unit-f').classList.toggle('active', u === 'f');
+            if(shouldRefresh && locations.length > 0) {
+                fetchWeatherForCurrent();
+            }
         }
 
         function switchMenuTab(tab) {
@@ -1019,7 +1059,11 @@
 
         async function fetchWeather(lat, lon, name) {
             try {
-                const weatherUrl = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,is_day,relative_humidity_2m,surface_pressure,wind_speed_10m,wind_direction_10m,weather_code&hourly=temperature_2m,weather_code,precipitation_probability,is_day&daily=weather_code,temperature_2m_max,temperature_2m_min,sunrise,sunset,uv_index_max,precipitation_probability_max&timezone=auto&forecast_days=8`;
+                const isF = currentUnit === 'f';
+                const tempUnit = isF ? 'fahrenheit' : 'celsius';
+                const windUnit = isF ? 'mph' : 'kmh';
+                
+                const weatherUrl = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,is_day,relative_humidity_2m,surface_pressure,wind_speed_10m,wind_direction_10m,weather_code&hourly=temperature_2m,weather_code,precipitation_probability,is_day&daily=weather_code,temperature_2m_max,temperature_2m_min,sunrise,sunset,uv_index_max,precipitation_probability_max&timezone=auto&forecast_days=8&temperature_unit=${tempUnit}&wind_speed_unit=${windUnit}`;
                 const airUrl = `https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${lat}&longitude=${lon}&current=us_aqi,alder_pollen,birch_pollen,grass_pollen,olive_pollen,ragweed_pollen,pm10,pm2_5,ozone`;
 
                 const [wRes, aRes] = await Promise.all([fetch(weatherUrl), fetch(airUrl)]);
@@ -1035,27 +1079,31 @@
         }
 
         function generateAssistantSummary(temp, code, wind, uv, rainProb, isDay, daily, aqi) {
+            let windKmh = currentUnit === 'f' ? wind * 1.609 : wind;
+            
+            let tempC = currentUnit === 'f' ? (temp - 32) * 5/9 : temp;
+
             let text = "";
             const isRainy = [51, 53, 55, 61, 63, 65, 80, 81, 82, 95].includes(code);
             const isSnowy = [71, 73, 75, 85, 86].includes(code);
             const timeOfDay = isDay ? "day" : "night";
 
-            if (temp < 0) text += `It's freezing this ${timeOfDay}. Keep warm! `;
-            else if (temp < 10) text += `A rather cold ${timeOfDay}. `;
-            else if (temp < 18) text += `Cool and crisp conditions. `;
-            else if (temp < 25) text += `Pleasantly mild right now. `;
-            else if (temp < 30) text += `It is quite warm outside. `;
+            if (tempC < 0) text += `It's freezing this ${timeOfDay}. Keep warm! `;
+            else if (tempC < 10) text += `A rather cold ${timeOfDay}. `;
+            else if (tempC < 18) text += `Cool and crisp conditions. `;
+            else if (tempC < 25) text += `Pleasantly mild right now. `;
+            else if (tempC < 30) text += `It is quite warm outside. `;
             else text += `Hot conditions currently. `;
 
-            if (temp < 5) text += "Heavy winter gear (thermal layers, gloves) recommended. ";
-            else if (temp < 12) text += "Wear a warm coat. ";
-            else if (temp < 18) text += "A sweater or light jacket is advised. ";
-            else if (temp < 24) text += "Long sleeves or a t-shirt should suffice. ";
+            if (tempC < 5) text += "Heavy winter gear (thermal layers, gloves) recommended. ";
+            else if (tempC < 12) text += "Wear a warm coat. ";
+            else if (tempC < 18) text += "A sweater or light jacket is advised. ";
+            else if (tempC < 24) text += "Long sleeves or a t-shirt should suffice. ";
             else text += "Shorts and light clothing are best. ";
 
             if (isRainy || rainProb > 40) text += "<b>Rain is likely today.</b> Don't forget an umbrella. ";
             if (isSnowy) text += "<b>Snow is expected.</b> Water-resistant boots are a good idea. ";
-            if (wind > 20) text += "It's breezy outside. ";
+            if (windKmh > 20) text += "It's breezy outside. ";
             if (isDay && uv > 6 && !isRainy) text += "UV index is high; wear sunscreen. ";
 
             if (daily) {
@@ -1064,8 +1112,10 @@
                 const tomorrowMax = daily.temperature_2m_max[1];
                 const diff = tomorrowMax - todayMax;
                 
-                if (diff > 2) text += "Temperatures will rise tomorrow. ";
-                else if (diff < -2) text += "It will get noticeably colder tomorrow. ";
+                const threshold = currentUnit === 'f' ? 4 : 2;
+
+                if (diff > threshold) text += "Temperatures will rise tomorrow. ";
+                else if (diff < -threshold) text += "It will get noticeably colder tomorrow. ";
                 else text += "Tomorrow will have similar temperatures. ";
 
                 let rainDays = 0;
@@ -1082,9 +1132,9 @@
             const badWeather = isRainy || isSnowy || rainProb >= 50;
             if (badWeather) {
                 text += "Outdoor activities are not recommended due to precipitation. ";
-            } else if (temp > 33) {
+            } else if (tempC > 33) {
                 text += "Avoid strenuous outdoor exercise due to high heat. ";
-            } else if (wind > 35) {
+            } else if (windKmh > 35) {
                 text += "Strong winds make outdoor activities difficult. ";
             } else {
                 text += "Conditions are good for outdoor activities like walking or jogging. ";
@@ -1137,6 +1187,7 @@
             const daily = wData.daily;
             const hourly = wData.hourly;
             const air = aData.current;
+            const isF = currentUnit === 'f';
             
             els.city.textContent = name;
             els.temp.textContent = Math.round(cur.temperature_2m);
@@ -1150,7 +1201,8 @@
                 daily.uv_index_max[0], todayRainProb, cur.is_day, daily, air.us_aqi
             );
 
-            els.wind.textContent = Math.round(cur.wind_speed_10m) + " km/h";
+            const windLabel = isF ? " mph" : " km/h";
+            els.wind.textContent = Math.round(cur.wind_speed_10m) + windLabel;
             els.windIcon.style.transform = `rotate(${cur.wind_direction_10m + 180}deg)`;
             els.hum.textContent = cur.relative_humidity_2m;
             els.pres.textContent = Math.round(cur.surface_pressure);
@@ -1209,10 +1261,15 @@
                 const date = new Date(daily.time[i]);
                 const pop = daily.precipitation_probability_max ? daily.precipitation_probability_max[i] : 0;
                 const dayIcon = getIcon(daily.weather_code[i], 1);
+                
+                const dateStr = (date.getMonth() + 1).toString().padStart(2, '0') + '.' + date.getDate().toString().padStart(2, '0');
 
                 const html = `
                     <div class="forecast-row">
-                        <div class="day-name">${days[date.getDay()]}</div>
+                        <div class="day-name">
+                            ${days[date.getDay()]}
+                            <span class="day-date">${dateStr}</span>
+                        </div>
                         <div class="forecast-mid">
                              <span class="material-symbols-outlined forecast-icon">${dayIcon}</span>
                              <div class="forecast-pop">${pop > 0 ? pop + '%' : ''}</div>
